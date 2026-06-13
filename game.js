@@ -42,6 +42,7 @@ const timeInput = document.getElementById('time-input');
 const startScreen = document.getElementById('start-screen');
 const gameOverScreen = document.getElementById('game-over-screen');
 const finalScoreEl = document.getElementById('final-score');
+const controlsEl = document.getElementById('controls');
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -101,11 +102,9 @@ function loadFishModel(url, x, z, color) {
                     child.receiveShadow = true;
                 }
             });
-
             obj.scale.set(0.1, 0.1, 0.1);
             obj.position.set(x, 0, z);
             obj.rotation.y = 0;
-            
             scene.add(obj);
             fishes.push(obj);
             console.log("Ikan berhasil dimuat!");
@@ -130,7 +129,6 @@ function createFallbackFish(x, z, color) {
     fishes.push(group);
 }
 
-// Load 2 ikan
 loadFishModel('3d-model.obj', -5, 0, 0xfd71a3);
 loadFishModel('3d-model.obj', 5, 0, 0x00ff00);
 
@@ -138,6 +136,41 @@ loadFishModel('3d-model.obj', 5, 0, 0x00ff00);
 const keys = {};
 window.addEventListener('keydown', (e) => keys[e.code] = true);
 window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+// === ON-SCREEN CONTROLS (TOUCH) ===
+const ctrlButtons = document.querySelectorAll('.ctrl-btn');
+
+ctrlButtons.forEach(btn => {
+    const key = btn.getAttribute('data-key');
+    
+    // Touch Start
+    btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        keys[key] = true;
+        btn.classList.add('active');
+    }, { passive: false });
+    
+    // Touch End
+    btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        keys[key] = false;
+        btn.classList.remove('active');
+    }, { passive: false });
+    
+    // Mouse Click
+    btn.addEventListener('mousedown', (e) => {
+        keys[key] = true;
+        btn.classList.add('active');
+    });
+    btn.addEventListener('mouseup', (e) => {
+        keys[key] = false;
+        btn.classList.remove('active');
+    });
+    btn.addEventListener('mouseleave', (e) => {
+        keys[key] = false;
+        btn.classList.remove('active');
+    });
+});
 
 // --- INTERAKSI: DRAG & DROP ---
 let isDragging = false;
@@ -209,31 +242,29 @@ function setActiveFish(index) {
     });
 }
 
-// --- GAME LOGIC (BENAR: UP=MAJU, DOWN=MUNDUR) ---
+// --- GAME LOGIC ---
 function update() {
     if (gameStarted && activeFishIndex !== -1 && !isDragging) {
         const fish = fishes[activeFishIndex];
         
-        // === Arrow Up = MAJU (bergerak ke -Z / ke atas layar) ===
+        // Arrow Up = Maju (ke atas layar)
         if (keys['ArrowUp']) fish.position.z -= 0.2;
-        
-        // === Arrow Down = MUNDUR (bergerak ke +Z / ke bawah layar) ===
+        // Arrow Down = Mundur (ke bawah layar)
         if (keys['ArrowDown']) fish.position.z += 0.2;
-        
         if (keys['ArrowLeft']) fish.position.x -= 0.2;
         if (keys['ArrowRight']) fish.position.x += 0.2;
 
-        // ROTASI: hadap sesuai arah gerak
-        if (keys['ArrowUp'])    fish.rotation.y = 0;          // Menghadap Atas
-        if (keys['ArrowDown']) fish.rotation.y = Math.PI;     // Menghadap Bawah
-        if (keys['ArrowLeft']) fish.rotation.y = Math.PI / 2;  // Menghadap Kiri
-        if (keys['ArrowRight']) fish.rotation.y = -Math.PI / 2; // Menghadap Kanan
+        // Rotasi menghadap arah gerakan
+        if (keys['ArrowUp']) fish.rotation.y = 0;
+        if (keys['ArrowDown']) fish.rotation.y = Math.PI;
+        if (keys['ArrowLeft']) fish.rotation.y = Math.PI / 2;
+        if (keys['ArrowRight']) fish.rotation.y = -Math.PI / 2;
 
-        // BATAS Aquarium
+        // Batas Aquarium
         fish.position.x = THREE.MathUtils.clamp(fish.position.x, -9, 9);
         fish.position.z = THREE.MathUtils.clamp(fish.position.z, -9, 9);
 
-        // MAKAN PELLET
+        // Makan Pellet
         for (let i = pellets.length - 1; i >= 0; i--) {
             if (fish.position.distanceTo(pellets[i].position) < 1.5) {
                 scene.remove(pellets[i]);
@@ -255,6 +286,7 @@ function startGame() {
     timeLeft = inputWaktu;
     gameStarted = true;
     startScreen.style.display = 'none';
+    controlsEl.style.display = 'block'; // Tampilkan tombol kontrol HP
     timerEl.innerText = `Waktu: ${timeLeft} detik`;
     
     timerInterval = setInterval(() => {
@@ -271,6 +303,7 @@ function endGame() {
     timerEl.style.color = "red";
     finalScoreEl.innerText = score;
     gameOverScreen.style.display = 'flex';
+    controlsEl.style.display = 'none';
 }
 
 document.getElementById('start-btn').addEventListener('click', startGame);
@@ -280,6 +313,7 @@ function animate() {
     requestAnimationFrame(animate);
     update();
     
+    // Animasi pellet melayang
     const time = Date.now() * 0.001;
     pellets.forEach((p, i) => {
         p.position.y += Math.sin(time + i) * 0.005;
@@ -290,6 +324,7 @@ function animate() {
 
 animate();
 
+// Handle Resize
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
