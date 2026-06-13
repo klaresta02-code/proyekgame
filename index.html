@@ -7,7 +7,7 @@
             margin: 0; 
             overflow: hidden; 
             background-color: #001e36; 
-            touch-action: none; /* Mencegah zoom saattouch */
+            touch-action: none; 
         }
         
         #ui { 
@@ -47,13 +47,13 @@
 
         #game-over-screen { display: none; background: rgba(0, 0, 0, 0.8); }
 
-        /* === ON-SCREEN CONTROLS === */
+        /* ON-SCREEN CONTROLS */
         #controls {
             position: absolute;
             bottom: 30px;
             right: 30px;
             z-index: 15;
-            display: none; /* Hanya muncul saat game mulai */
+            display: none;
         }
 
         .d-pad {
@@ -85,7 +85,6 @@
             transform: scale(0.95);
         }
 
-        /* Posisi tombol panah */
         .btn-up    { grid-column: 2; grid-row: 1; }
         .btn-left { grid-column: 1; grid-row: 2; }
         .btn-down { grid-column: 2; grid-row: 3; }
@@ -138,4 +137,4 @@
 
     <script type="module" src="./game.js"></script>
 </body>
-</html>>
+</html>
